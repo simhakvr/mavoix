@@ -1,1 +1,35 @@
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+%matplotlib inline
+import pandas as pd
+from sklearn import datasets
+#Iris Dataset
+mav_df= pd.read_excel('C:/Users/91868/Downloads/mavoix_ml_sample_dataset.xlsx')
 
+print(mav_df.isnull().sum())
+
+mav_df=mav_df.drop(['Application_ID','Current City','Unnamed: 10'],axis=1)
+mav_df.columns
+
+mav_df.dtypes
+
+def Encode(mav_df):
+    for column in mav_df.columns[~mav_df.columns.isin([])]:
+        mav_df[column] = mav_df[column].factorize()[0]
+    return mav_df
+
+mav = Encode(mav_df.copy())
+
+print(mav.isnull().sum())
+print(mav.dtypes)
+
+kmeans = KMeans(n_clusters=2)
+kmeans.fit(mav)
+
+centroids = kmeans.cluster_centers_
+labels = kmeans.labels_
+
+print(centroids)
+print(labels)
