@@ -1,35 +1,56 @@
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
 import numpy as np
-%matplotlib inline
 import pandas as pd
-from sklearn import datasets
-#Iris Dataset
+
 mav_df= pd.read_excel('C:/Users/91868/Downloads/mavoix_ml_sample_dataset.xlsx')
 
 print(mav_df.isnull().sum())
 
-mav_df=mav_df.drop(['Application_ID','Current City','Unnamed: 10'],axis=1)
+mav_df=mav_df.drop(['Unnamed: 10'],axis=1)
 mav_df.columns
 
-mav_df.dtypes
+print(mav_df.isnull().sum())
+print(mav_df.dtypes)
 
-def Encode(mav_df):
-    for column in mav_df.columns[~mav_df.columns.isin([])]:
-        mav_df[column] = mav_df[column].factorize()[0]
-    return mav_df
+req_df=pd.DataFrame(mav_df['Other skills'].str.get_dummies(sep=', '))
+req_df.dtypes
 
-mav = Encode(mav_df.copy())
+mav_df=mav_df.drop(['Other skills'],axis=1)
 
-print(mav.isnull().sum())
-print(mav.dtypes)
+mav_df=pd.concat([mav_df,req_df], axis=1, ignore_index=False)
 
-kmeans = KMeans(n_clusters=2)
-kmeans.fit(mav)
+print(mav_df.isnull().sum())
 
-centroids = kmeans.cluster_centers_
-labels = kmeans.labels_
+print(mav_df.dtypes)
 
-print(centroids)
-print(labels)
+cols_mode = ['Degree','Stream','Current Year Of Graduation','Performance_PG','Performance_UG','Performance_12','Performance_10']
+
+mav_df[cols_mode].apply(lambda x: x.fillna(x.mode(), inplace=True))
+
+mav_df['Degree'].fillna(mav_df['Degree'].mode()[0],inplace=True)
+mav_df['Stream'].fillna(mav_df['Stream'].mode()[0], inplace=True)
+mav_df['Current Year Of Graduation'].fillna(mav_df['Current Year Of Graduation'].mode(), inplace=True)
+mav_df['Performance_PG'].fillna(mav_df['Performance_PG'].mode()[0], inplace=True)
+mav_df['Performance_UG'].fillna(mav_df['Performance_UG'].mode()[0], inplace=True)
+mav_df['Performance_12'].fillna(mav_df['Performance_12'].mode()[0], inplace=True)
+mav_df['Performance_10'].fillna(mav_df['Performance_10'].mode()[0], inplace=True)
+
+print(mav_df.isnull().sum())
+
+y=mav_df['Application_ID']
+mav_df=mav_df.drop(['Application_ID'],axis=1)
+catcols=[ele for ele in mav_df.columns if mav_df[ele].dtype==object]
+from sklearn.preprocessing import LabelEncoder
+for col in catcols:
+    le=LabelEncoder()
+    mav_df[col]=le.fit_transform(mav_df[col])
+
+kmeans = KMeans(n_clusters=2,random_state=100)
+kmeans.fit(mav_df)
+
+mav_df['label']=kmeans.labels_
+
+df=pd.DataFrame({'Application_ID':y,'Cluster_Number':mav_df['label']})
+df
